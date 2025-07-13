@@ -3,6 +3,7 @@ import { PrismaClient } from '@prisma/client/edge'
 import { withAccelerate } from '@prisma/extension-accelerate'
 import bcrypt from 'bcryptjs'
 import { sign } from 'hono/jwt'
+import { signupInput, signinInput } from '@rahul-pandey-17/common'
 
 const authRoutes = new Hono<{
   Bindings: {
@@ -18,6 +19,14 @@ authRoutes.post('/signup', async (c) => {
     }).$extends(withAccelerate())
 
     const body = await c.req.json()
+    const verify = signupInput.safeParse(body)
+
+    if (!verify.success) {
+      c.status(400)
+      return c.json({
+        message: 'Invalid inputs'
+      })
+    }
 
     const hashedPassword = await bcrypt.hash(body.password, 10)
 
@@ -52,6 +61,14 @@ authRoutes.post('/signin', async (c) => {
     }).$extends(withAccelerate())
 
     const body = await c.req.json()
+    const verify = signinInput.safeParse(body)
+
+    if (!verify.success) {
+      c.status(400)
+      return c.json({
+        message: 'Invalid inputs'
+      })
+    }
 
     const user = await prisma.user.findUnique({
       where: {
